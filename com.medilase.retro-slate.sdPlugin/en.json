@@ -1,0 +1,26 @@
+{
+	"Name": "Retro Slate",
+	"Description": "Turn your Stream Deck and your computer into a retro drawing slate: two knobs, one line, shake to erase.",
+	"Category": "Retro Slate",
+	"com.medilase.retro-slate.knob": {
+		"Name": "Knob",
+		"Tooltip": "Stream Deck + dial: turn to draw, press to change speed, touch the screen to shake."
+	},
+	"com.medilase.retro-slate.arrow": {
+		"Name": "Arrow",
+		"Tooltip": "Hold to draw in one of 8 directions."
+	},
+	"com.medilase.retro-slate.shake": {
+		"Name": "Shake",
+		"Tooltip": "Press to shake the slate a little. Hold for one second to erase everything."
+	},
+	"com.medilase.retro-slate.slate": {
+		"Name": "Slate",
+		"Tooltip": "Live preview of your drawing. Press to open the slate on your computer."
+	},
+	"com.medilase.retro-slate.photo": {
+		"Name": "Photo",
+		"Tooltip": "Save your drawing as a picture in Pictures › Retro Slate."
+	},
+	"Localization": {}
+}

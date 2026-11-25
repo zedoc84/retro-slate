@@ -1,0 +1,25 @@
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+	margin: 0; padding: 10px 12px 14px;
+	font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	color: #d8d8d8; background: #2d2d2d;
+}
+.row { display: flex; align-items: center; gap: 10px; margin: 7px 0; }
+.row > label { flex: 0 0 34%; text-align: right; color: #b8b8b8; }
+.row > .field { flex: 1; }
+select, button {
+	width: 100%; height: 26px; padding: 0 8px; border: 1px solid #3c3c3c; border-radius: 4px;
+	background: #3d3d3d; color: #e6e6e6; font: inherit;
+}
+select:focus, button:focus { outline: 1px solid #5a8dee; }
+button { cursor: pointer; }
+button:hover { background: #474747; }
+.primary { background: #1f6672; border-color: #2c8190; }
+.primary:hover { background: #267683; }
+.grid { display: grid; grid-template-columns: repeat(3, 34px); gap: 4px; }
+.grid button { width: 34px; height: 34px; padding: 0; font-size: 17px; line-height: 1; }
+.grid button.on { background: #1f6672; border-color: #49a5b4; color: #fff; }
+.grid .mid { border: 1px dashed #4a4a4a; border-radius: 4px; }
+.help { margin: 10px 0 0 calc(34% + 10px); color: #9a9a9a; font-size: 11px; }
+.help b { color: #cfcfcf; font-weight: 600; }

@@ -1,0 +1,121 @@
+{
+	"$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+	"Name": "Retro Slate",
+	"Version": "1.0.0.0",
+	"Author": "Medilase",
+	"Description": "Turn your Stream Deck and your computer into a retro drawing slate: two knobs, one line, shake to erase.",
+	"Category": "Retro Slate",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"Icon": "imgs/plugin/marketplace",
+	"CodePath": "bin/plugin.js",
+	"SDKVersion": 3,
+	"UUID": "com.medilase.retro-slate",
+	"Software": {
+		"MinimumVersion": "7.1"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "12"
+		},
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Nodejs": {
+		"Version": "24"
+	},
+	"Actions": [
+		{
+			"Name": "Knob",
+			"UUID": "com.medilase.retro-slate.knob",
+			"Icon": "imgs/actions/knob/icon",
+			"Tooltip": "Stream Deck + dial: turn to draw, press to change speed, touch the screen to shake.",
+			"PropertyInspectorPath": "ui/knob.html",
+			"Controllers": [
+				"Encoder"
+			],
+			"Encoder": {
+				"layout": "$B1",
+				"Icon": "imgs/actions/knob/encoder",
+				"StackColor": "#1f6672",
+				"TriggerDescription": {
+					"Rotate": "Draw",
+					"Push": "Speed",
+					"Touch": "Shake",
+					"LongTouch": "Erase all"
+				}
+			},
+			"States": [
+				{
+					"Image": "imgs/actions/knob/encoder"
+				}
+			],
+			"SupportedInMultiActions": false,
+			"UserTitleEnabled": false
+		},
+		{
+			"Name": "Arrow",
+			"UUID": "com.medilase.retro-slate.arrow",
+			"Icon": "imgs/actions/arrow/icon",
+			"Tooltip": "Hold to draw in one of 8 directions.",
+			"PropertyInspectorPath": "ui/arrow.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/arrow/key",
+					"ShowTitle": false
+				}
+			],
+			"SupportedInMultiActions": false
+		},
+		{
+			"Name": "Shake",
+			"UUID": "com.medilase.retro-slate.shake",
+			"Icon": "imgs/actions/shake/icon",
+			"Tooltip": "Press to shake the slate a little. Hold for one second to erase everything.",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/shake/key",
+					"ShowTitle": false
+				}
+			]
+		},
+		{
+			"Name": "Slate",
+			"UUID": "com.medilase.retro-slate.slate",
+			"Icon": "imgs/actions/slate/icon",
+			"Tooltip": "Live preview of your drawing. Press to open the slate on your computer.",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/slate/key",
+					"ShowTitle": false
+				}
+			]
+		},
+		{
+			"Name": "Photo",
+			"UUID": "com.medilase.retro-slate.photo",
+			"Icon": "imgs/actions/photo/icon",
+			"Tooltip": "Save your drawing as a picture in Pictures › Retro Slate.",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/photo/key",
+					"ShowTitle": false
+				}
+			]
+		}
+	]
+}

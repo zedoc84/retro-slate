@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ardoise rétro</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+:root{
+	--f:#1f6672; --fl:#3a8f9b; --fd:#0f3d45;
+	--ink:#3b3b39;
+	color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+	font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+	color:#e9e4dc; overflow:hidden; user-select:none; -webkit-user-select:none;
+	background:
+		radial-gradient(ellipse 80% 70% at 50% 45%, #3a332c 0%, #241f1a 55%, #14110e 100%);
+	display:grid; place-items:center;
+}
+/* grain du bureau */
+body::before{
+	content:""; position:fixed; inset:0; pointer-events:none; opacity:.35; mix-blend-mode:overlay;
+	background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* La scène : toutes les mesures en 1/1000 de la largeur de l'ardoise (0,1cqw) */
+.stage{ width:min(94vw, calc(88vh * 1000 / 860)); container-type:inline-size; position:relative; }
+.slate{
+	position:relative; width:100cqw; height:86cqw; border-radius:7cqw;
+	background:
+		radial-gradient(ellipse 60% 35% at 22% 8%, rgba(255,255,255,.28), rgba(255,255,255,0) 70%),
+		linear-gradient(162deg, var(--fl) 0%, var(--f) 38%, var(--fd) 100%);
+	box-shadow:
+		inset 0 .5cqw .6cqw rgba(255,255,255,.25),
+		inset 0 -1.2cqw 1.6cqw rgba(0,0,0,.35),
+		0 3cqw 6cqw rgba(0,0,0,.55),
+		0 .8cqw 1.2cqw rgba(0,0,0,.4);
+	transition: background .5s;
+	will-change: transform;
+}
+.bezel{
+	position:absolute; left:6.6cqw; top:5.6cqw; width:86.8cqw; height:60.55cqw; border-radius:2.6cqw;
+	background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.25));
+	box-shadow: inset 0 .5cqw .9cqw rgba(0,0,0,.55), 0 .25cqw 0 rgba(255,255,255,.18);
+}
+.screen{
+	position:absolute; left:8cqw; top:7cqw; width:84cqw; height:57.75cqw; border-radius:1.6cqw; overflow:hidden;
+	background:
+		radial-gradient(ellipse 90% 80% at 30% 20%, #e5e5e0 0%, #c8c8c3 62%, #b4b4af 100%);
+	box-shadow: inset 0 .35cqw .8cqw rgba(0,0,0,.45), inset 0 -.2cqw .4cqw rgba(255,255,255,.35);
+}
+.screen::before{ /* poudre d'aluminium */
+	content:""; position:absolute; inset:0; opacity:.5; mix-blend-mode:multiply; pointer-events:none;
+	background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .55  0 0 0 0 .53  0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.screen::after{ /* reflet de la vitre */
+	content:""; position:absolute; inset:0; pointer-events:none;
+	background:linear-gradient(118deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.06) 28%, rgba(255,255,255,0) 28.4%, rgba(255,255,255,0) 100%);
+}
+canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.stylus{
+	position:absolute; width:.55cqw; height:.55cqw; margin:-.275cqw 0 0 -.275cqw; border-radius:50%;
+	background:#262625; box-shadow:0 0 .25cqw rgba(0,0,0,.35); pointer-events:none;
+}
+.knob{
+	position:absolute; width:12.4cqw; height:12.4cqw; top:69.8cqw; border-radius:50%; cursor:grab; touch-action:none;
+	filter: drop-shadow(0 .7cqw .7cqw rgba(0,0,0,.5));
+}
+.knob.l{ left:4.8cqw } .knob.r{ left:82.8cqw }
+.knob:active{ cursor:grabbing }
+.knob .rot{
+	position:absolute; inset:0; border-radius:50%;
+	background:
+		radial-gradient(circle at 50% 50%, transparent 0 66%, rgba(0,0,0,.18) 66.5% 100%),
+		repeating-conic-gradient(from 0deg, #e9ebee 0deg 4deg, #8e9399 4deg 7.5deg),
+		#c4c7cb;
+	box-shadow: inset 0 0 0 .2cqw rgba(0,0,0,.35);
+}
+.knob .cap{
+	position:absolute; inset:17%; border-radius:50%;
+	background: radial-gradient(circle at 38% 32%, #ffffff 0%, #d7dadd 35%, #a2a7ad 75%, #868b92 100%);
+	box-shadow: 0 .2cqw .4cqw rgba(0,0,0,.45), inset 0 -.2cqw .3cqw rgba(0,0,0,.2);
+}
+.knob .notch{
+	position:absolute; left:50%; top:4%; width:.7cqw; height:2.4cqw; margin-left:-.35cqw; border-radius:.35cqw;
+	background:#2b2e33; box-shadow: 0 .08cqw 0 rgba(255,255,255,.4);
+}
+.knob .gloss{ position:absolute; inset:17%; border-radius:50%; pointer-events:none;
+	background: radial-gradient(ellipse 60% 40% at 40% 25%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%); }
+.label{
+	position:absolute; left:0; right:0; top:74.4cqw; text-align:center;
+	font: 600 3.1cqw/1 "Avenir Next","Trebuchet MS",sans-serif; letter-spacing:1.1cqw; text-transform:uppercase;
+	color: color-mix(in srgb, var(--f) 70%, #ffffff);
+	text-shadow: 0 -.12cqw 0 rgba(0,0,0,.45), 0 .12cqw 0 rgba(255,255,255,.18);
+	opacity:.85; pointer-events:none;
+}
+.label small{ display:block; margin-top:1.2cqw; font-size:1.5cqw; letter-spacing:.5cqw; opacity:.7 }
+
+/* Secousse */
+@keyframes shake{
+	0%{transform:none}
+	12%{transform:translate(-2.2cqw,-.8cqw) rotate(-3.2deg)}
+	26%{transform:translate(2.4cqw,.9cqw) rotate(3deg)}
+	40%{transform:translate(-2cqw,.5cqw) rotate(-2.4deg)}
+	55%{transform:translate(1.6cqw,-.6cqw) rotate(1.8deg)}
+	70%{transform:translate(-1cqw,.3cqw) rotate(-1deg)}
+	85%{transform:translate(.5cqw,0) rotate(.4deg)}
+	100%{transform:none}
+}
+.slate.shaking{ animation: shake .62s cubic-bezier(.36,.07,.19,.97) }
+.slate.shaking.big{ animation-duration: 1s }
+canvas.fade{ transition: opacity .35s; }
+
+/* Barre d'outils */
+.ui{ position:fixed; top:14px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; gap:12px;
+	transition:opacity .4s; pointer-events:none; z-index:5 }
+.ui.hidden{ opacity:0 }
+.pill{ pointer-events:auto; display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:999px;
+	background:rgba(20,17,14,.62); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+	border:1px solid rgba(255,255,255,.08); box-shadow:0 6px 20px rgba(0,0,0,.35) }
+.status{ padding:7px 14px 7px 12px; font-size:13px; color:#d9d2c6 }
+.dot{ width:9px; height:9px; border-radius:50%; background:#d9534f; box-shadow:0 0 8px #d9534f }
+.status.on .dot{ background:#5cc98a; box-shadow:0 0 8px #5cc98a }
+.sw{ width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,.18); cursor:pointer; padding:0 }
+.sw.on{ border-color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.25) }
+.sep{ width:1px; height:20px; background:rgba(255,255,255,.12); margin:0 4px }
+.btn{ height:32px; min-width:32px; padding:0 10px; border:0; border-radius:999px; background:transparent; color:#eee6da;
+	font:inherit; font-size:13px; display:inline-flex; align-items:center; gap:6px; cursor:pointer }
+.btn:hover{ background:rgba(255,255,255,.1) }
+.btn svg{ width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
+.toast{ position:fixed; left:50%; bottom:22px; transform:translate(-50%, 20px); opacity:0; transition:.3s; z-index:6;
+	padding:10px 16px; border-radius:12px; background:rgba(20,17,14,.85); border:1px solid rgba(255,255,255,.1); font-size:13px }
+.toast.show{ opacity:1; transform:translate(-50%,0) }
+.help{ position:fixed; inset:0; display:none; place-items:center; background:rgba(10,8,6,.55); z-index:7;
+	backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px) }
+.help.show{ display:grid }
+.card{ width:min(560px, 92vw); padding:22px 26px; border-radius:18px; background:#1d1915; border:1px solid rgba(255,255,255,.08);
+	box-shadow:0 20px 60px rgba(0,0,0,.5) }
+.card h2{ margin:0 0 4px; font-size:19px } .card p.sub{ margin:0 0 14px; color:#a99f92 }
+.card h3{ margin:14px 0 6px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#8fc7cf }
+.card ul{ margin:0; padding:0; list-style:none; display:grid; gap:5px }
+.card li{ display:flex; gap:10px } .card li b{ flex:0 0 170px; color:#efe7dc; font-weight:600 }
+.card li span{ color:#bdb3a6 }
+kbd{ font:12px ui-monospace,Menlo,monospace; padding:1px 6px; border-radius:5px; background:#2d2822; border:1px solid #3d362e }
+.offline .screen{ filter: saturate(.6) brightness(.92) }
+</style>
+</head>
+<body>
+<div class="ui" id="ui">
+	<div class="pill status" id="status"><span class="dot"></span><span id="statusText">…</span></div>
+	<div class="pill" id="tools">
+		<div id="swatches" style="display:flex;gap:6px"></div>
+		<span class="sep"></span>
+		<button class="btn" id="bShake" title=""><svg viewBox="0 0 24 24"><path d="M4 8l-2 4 2 4M20 8l2 4-2 4"/><rect x="6" y="5" width="12" height="14" rx="2"/></svg><span data-i="shake"></span></button>
+		<button class="btn" id="bPhoto" title=""><svg viewBox="0 0 24 24"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-i="photo"></span></button>
+		<button class="btn" id="bFull" title=""><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+		<button class="btn" id="bHelp" title=""><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3M12 17h.01"/></svg></button>
+	</div>
+</div>
+
+<div class="stage">
+	<div class="slate" id="slate">
+		<div class="bezel"></div>
+		<div class="screen" id="screen">
+			<canvas id="cv"></canvas>
+			<div class="stylus" id="stylus"></div>
+		</div>
+		<div class="knob l" id="kH" data-axis="h"><div class="rot" id="rH"><div class="notch"></div></div><div class="cap"></div><div class="gloss"></div></div>
+		<div class="knob r" id="kV" data-axis="v"><div class="rot" id="rV"><div class="notch"></div></div><div class="cap"></div><div class="gloss"></div></div>
+		<div class="label" id="label"></div>
+	</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="help" id="help">
+	<div class="card" id="helpCard"></div>
+</div>
+
+<script>
+"use strict";
+const W = 640, H = 440;
+const DEG_PER_UNIT = 3; // un tour de bouton ≈ 120 unités
+
+const I18N = {
+	fr: {
+		title: "Ardoise rétro", label: "Ardoise rétro", tag: "Stream Deck",
+		on: "Stream Deck relié", off: "Plugin Stream Deck arrêté — reconnexion…",
+		shake: "Secouer", photo: "Photo", full: "Plein écran (F)", help: "Aide (?)",
+		saved: "Photo enregistrée : ", frames: { petrole:"Bleu pétrole", moutarde:"Moutarde", sapin:"Vert sapin", noyer:"Noyer", anthracite:"Anthracite", lilas:"Lilas" },
+		helpHtml: `<h2>Ardoise rétro</h2><p class="sub">Deux boutons, un seul trait. On secoue pour effacer.</p>
+		<h3>Stream Deck +</h3><ul>
+		<li><b>Tourner les molettes</b><span>gauche ↔ horizontal, droite ↕ vertical</span></li>
+		<li><b>Appuyer sur une molette</b><span>vitesse : fin, normal, rapide</span></li>
+		<li><b>Toucher l'écran</b><span>secouer · appui long : tout effacer</span></li></ul>
+		<h3>Autres Stream Deck</h3><ul>
+		<li><b>Flèche</b><span>maintenir pour tracer (8 directions)</span></li>
+		<li><b>Secouer</b><span>un appui efface un peu · maintenir 1 s : tout</span></li>
+		<li><b>Ardoise · Photo</b><span>aperçu sur la touche · image dans Images › Ardoise rétro</span></li></ul>
+		<h3>Clavier et souris</h3><ul>
+		<li><b><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></b><span>tracer · <kbd>Maj</kbd> rapide · <kbd>Alt</kbd> fin</span></li>
+		<li><b><kbd>Espace</kbd> · <kbd>Suppr</kbd></b><span>secouer · tout effacer</span></li>
+		<li><b><kbd>P</kbd> · <kbd>F</kbd> · <kbd>?</kbd></b><span>photo · plein écran · aide</span></li>
+		<li><b>Les boutons à l'écran</b><span>les faire tourner à la souris, ou avec la molette</span></li></ul>`
+	},
+	en: {
+		title: "Retro Slate", label: "Retro Slate", tag: "Stream Deck",
+		on: "Stream Deck connected", off: "Stream Deck plugin stopped — reconnecting…",
+		shake: "Shake", photo: "Photo", full: "Full screen (F)", help: "Help (?)",
+		saved: "Picture saved: ", frames: { petrole:"Petrol blue", moutarde:"Mustard", sapin:"Fir green", noyer:"Walnut", anthracite:"Charcoal", lilas:"Lilac" },
+		helpHtml: `<h2>Retro Slate</h2><p class="sub">Two knobs, one line. Shake to erase.</p>
+		<h3>Stream Deck +</h3><ul>
+		<li><b>Turn the dials</b><span>left ↔ horizontal, right ↕ vertical</span></li>
+		<li><b>Press a dial</b><span>speed: fine, normal, fast</span></li>
+		<li><b>Touch the screen</b><span>shake · long touch: erase all</span></li></ul>
+		<h3>Other Stream Decks</h3><ul>
+		<li><b>Arrow</b><span>hold to draw (8 directions)</span></li>
+		<li><b>Shake</b><span>one press erases a little · hold 1 s: everything</span></li>
+		<li><b>Slate · Photo</b><span>live preview on the key · picture in Pictures › Retro Slate</span></li></ul>
+		<h3>Keyboard and mouse</h3><ul>
+		<li><b><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></b><span>draw · <kbd>Shift</kbd> fast · <kbd>Alt</kbd> fine</span></li>
+		<li><b><kbd>Space</kbd> · <kbd>Delete</kbd></b><span>shake · erase all</span></li>
+		<li><b><kbd>P</kbd> · <kbd>F</kbd> · <kbd>?</kbd></b><span>photo · full screen · help</span></li>
+		<li><b>The on-screen knobs</b><span>turn them with the mouse or the scroll wheel</span></li></ul>`
+	}
+};
+let L = I18N[(navigator.language || "fr").startsWith("fr") ? "fr" : "en"];
+
+const $ = (id) => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d");
+const st = { segs: [], x: W / 2, y: H / 2, frame: "petrole", frames: {}, angH: 0, angV: 0, online: false };
+
+/* ---------- Dessin ---------- */
+let scale = 1;
+function resize() {
+	const r = $("screen").getBoundingClientRect();
+	const dpr = window.devicePixelRatio || 1;
+	cv.width = Math.round(r.width * dpr);
+	cv.height = Math.round(r.height * dpr);
+	scale = cv.width / W;
+	redraw();
+}
+function strokeSeg(s) {
+	ctx.globalAlpha = s[4];
+	ctx.beginPath();
+	ctx.moveTo(s[0] * scale, s[1] * scale);
+	ctx.lineTo(s[2] * scale, s[3] * scale);
+	ctx.stroke();
+}
+function setPen() {
+	ctx.lineCap = "round"; ctx.lineJoin = "round";
+	ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#3b3b39";
+	ctx.lineWidth = Math.max(1, 1.7 * scale);
+}
+function redraw() {
+	ctx.setTransform(1, 0, 0, 1, 0, 0);
+	ctx.clearRect(0, 0, cv.width, cv.height);
+	setPen();
+	// traits pleins regroupés en un seul chemin (rapide), traits estompés un par un
+	ctx.globalAlpha = 1;
+	ctx.beginPath();
+	let lx = NaN, ly = NaN;
+	for (const s of st.segs) {
+		if (s[4] !== 1) continue;
+		if (s[0] !== lx || s[1] !== ly) ctx.moveTo(s[0] * scale, s[1] * scale);
+		ctx.lineTo(s[2] * scale, s[3] * scale);
+		lx = s[2]; ly = s[3];
+	}
+	ctx.stroke();
+	for (const s of st.segs) if (s[4] !== 1) strokeSeg(s);
+	ctx.globalAlpha = 1;
+	placeStylus();
+}
+function placeStylus() {
+	const p = $("stylus");
+	p.style.left = (st.x / W * 100) + "%";
+	p.style.top = (st.y / H * 100) + "%";
+}
+function turnKnobs() {
+	$("rH").style.transform = `rotate(${st.angH}deg)`;
+	$("rV").style.transform = `rotate(${st.angV}deg)`;
+}
+
+/* ---------- Cadre ---------- */
+function applyFrame(c) {
+	const f = st.frames[c]; if (!f) return;
+	st.frame = c;
+	const r = document.documentElement.style;
+	r.setProperty("--f", f.base); r.setProperty("--fl", f.light); r.setProperty("--fd", f.dark);
+	document.querySelectorAll(".sw").forEach(b => b.classList.toggle("on", b.dataset.c === c));
+	document.querySelector("link[rel=icon]").href = "data:image/svg+xml," + encodeURIComponent(
+		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="56" y="4" rx="10" fill="${f.base}"/><rect x="7" y="10" width="50" height="32" rx="3" fill="#cfcfca"/><path d="M14 34h10V22h12v8h12" stroke="#3b3b39" stroke-width="2.4" fill="none"/><circle cx="12" cy="50" r="5" fill="#e3e5e8"/><circle cx="52" cy="50" r="5" fill="#e3e5e8"/></svg>`);
+}
+function buildSwatches() {
+	const box = $("swatches"); box.innerHTML = "";
+	for (const [c, f] of Object.entries(st.frames)) {
+		const b = document.createElement("button");
+		b.className = "sw"; b.dataset.c = c; b.title = L.frames[c] || c;
+		b.style.background = `linear-gradient(160deg, ${f.light}, ${f.base} 50%, ${f.dark})`;
+		b.onclick = () => send({ t: "frame", c });
+		box.appendChild(b);
+	}
+}
+
+/* ---------- Textes ---------- */
+function applyTexts() {
+	document.title = L.title;
+	document.documentElement.lang = L === I18N.fr ? "fr" : "en";
+	$("label").innerHTML = `${L.label}<small>${L.tag}</small>`;
+	document.querySelectorAll("[data-i]").forEach(el => el.textContent = L[el.dataset.i]);
+	$("bShake").title = L.shake + " (Espace)"; $("bPhoto").title = L.photo + " (P)";
+	$("bFull").title = L.full; $("bHelp").title = L.help;
+	$("helpCard").innerHTML = L.helpHtml;
+	setOnline(st.online);
+	buildSwatches(); applyFrame(st.frame);
+}
+function setOnline(on) {
+	st.online = on;
+	$("status").classList.toggle("on", on);
+	$("statusText").textContent = on ? L.on : L.off;
+	document.body.classList.toggle("offline", !on);
+}
+
+/* ---------- Liaison avec le plugin ---------- */
+let shakingUntil = 0, pendingRedraw = null;
+function handle(m) {
+	switch (m.t) {
+		case "init":
+			if (m.lang && I18N[m.lang]) L = I18N[m.lang];
+			st.frames = m.frames || st.frames; st.segs = m.segs || []; st.x = m.x; st.y = m.y;
+			st.frame = m.frame || "petrole";
+			applyTexts(); resize();
+			break;
+		case "mv":
+			st.segs[m.i] = m.s; st.x = m.x; st.y = m.y;
+			st.angH += m.dx * DEG_PER_UNIT; st.angV -= m.dy * DEG_PER_UNIT;
+			setPen(); if (m.s[4] === 1) strokeSeg(m.s); else redraw();
+			ctx.globalAlpha = 1; placeStylus(); turnKnobs();
+			break;
+		case "shake": {
+			const s = $("slate");
+			s.classList.remove("shaking", "big"); void s.offsetWidth;
+			s.classList.add("shaking"); if (m.full) s.classList.add("big");
+			shakingUntil = performance.now() + (m.full ? 450 : 260);
+			break;
+		}
+		case "state": {
+			st.segs = m.segs; st.x = m.x; st.y = m.y;
+			const wait = shakingUntil - performance.now();
+			clearTimeout(pendingRedraw);
+			if (wait > 0) pendingRedraw = setTimeout(redraw, wait); else redraw();
+			break;
+		}
+		case "frame": applyFrame(m.c); break;
+		case "photo": makePng().then(data => post("/photo", { id: m.id, data })); break;
+		case "saved": toast(L.saved + m.shown); break;
+	}
+}
+function connect() {
+	const es = new EventSource("/events");
+	es.onopen = () => setOnline(true);
+	es.onmessage = (e) => { try { handle(JSON.parse(e.data)); } catch (err) { console.error(err); } };
+	es.onerror = () => setOnline(false);
+}
+function post(url, body) {
+	return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => null);
+}
+function send(o) { return post("/input", o); }
+
+/* Mouvements regroupés : un envoi à la fois, le reste s'accumule */
+let qx = 0, qy = 0, inflight = false;
+function queueMove(dx, dy) { qx += dx; qy += dy; flush(); }
+async function flush() {
+	if (inflight || (Math.abs(qx) < 0.01 && Math.abs(qy) < 0.01)) return;
+	const dx = Math.max(-60, Math.min(60, qx)), dy = Math.max(-60, Math.min(60, qy));
+	qx -= dx; qy -= dy; inflight = true;
+	await send({ t: "move", dx, dy });
+	inflight = false; flush();
+}
+
+/* ---------- Clavier ---------- */
+const held = new Set();
+let lastT = 0, holdT = 0;
+addEventListener("keydown", (e) => {
+	if (e.metaKey || e.ctrlKey) return;
+	const k = e.key;
+	if (k.startsWith("Arrow")) {
+		e.preventDefault();
+		if (!held.has(k)) { held.add(k); if (held.size === 1) { holdT = performance.now(); lastT = 0; requestAnimationFrame(loop); } nudge(k, e.altKey ? .5 : 1); }
+		return;
+	}
+	if (e.repeat) return;
+	if (k === " ") { e.preventDefault(); send({ t: "shake" }); }
+	else if (k === "Delete" || k === "Backspace") send({ t: "clear" });
+	else if (k === "p" || k === "P") photo();
+	else if (k === "f" || k === "F") fullscreen();
+	else if (k === "?" || k === "h" || k === "H") toggleHelp();
+	else if (k === "Escape") $("help").classList.remove("show");
+	speedMods = { shift: e.shiftKey, alt: e.altKey };
+});
+addEventListener("keyup", (e) => { held.delete(e.key); speedMods = { shift: e.shiftKey, alt: e.altKey }; });
+addEventListener("blur", () => held.clear());
+let speedMods = { shift: false, alt: false };
+function dirOf() {
+	let dx = 0, dy = 0;
+	if (held.has("ArrowLeft")) dx -= 1; if (held.has("ArrowRight")) dx += 1;
+	if (held.has("ArrowUp")) dy -= 1; if (held.has("ArrowDown")) dy += 1;
+	if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
+	return [dx, dy];
+}
+function nudge(k, n) {
+	const v = { ArrowLeft: [-n, 0], ArrowRight: [n, 0], ArrowUp: [0, -n], ArrowDown: [0, n] }[k];
+	queueMove(v[0], v[1]);
+}
+function loop(t) {
+	if (!held.size) return;
+	if (lastT) {
+		const dt = Math.min(50, t - lastT) / 1000;
+		const since = t - holdT;
+		if (since > 180) {
+			let v = 95 * (since < 700 ? 1 : Math.min(2.6, 1 + (since - 700) / 900 * 1.6));
+			if (speedMods.shift) v *= 2.4; if (speedMods.alt) v *= .3;
+			const [dx, dy] = dirOf();
+			queueMove(dx * v * dt, dy * v * dt);
+		}
+	}
+	lastT = t;
+	requestAnimationFrame(loop);
+}
+
+/* ---------- Boutons à la souris ---------- */
+for (const kn of [$("kH"), $("kV")]) {
+	const axis = kn.dataset.axis;
+	let last = null;
+	const angle = (e) => { const r = kn.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
+	const turn = (deg) => { const u = deg / DEG_PER_UNIT; axis === "h" ? queueMove(u, 0) : queueMove(0, -u); };
+	kn.addEventListener("pointerdown", (e) => { kn.setPointerCapture(e.pointerId); last = angle(e); });
+	kn.addEventListener("pointermove", (e) => {
+		if (last === null) return;
+		const a = angle(e); let d = a - last; if (d > 180) d -= 360; if (d < -180) d += 360;
+		last = a; turn(d);
+	});
+	const stop = () => last = null;
+	kn.addEventListener("pointerup", stop); kn.addEventListener("pointercancel", stop);
+	kn.addEventListener("wheel", (e) => { e.preventDefault(); turn(-e.deltaY * .35); }, { passive: false });
+}
+
+/* ---------- Photo PNG (toute l'ardoise) ---------- */
+function makePng() {
+	const PW = 1600, k = PW / 1000, c = document.createElement("canvas");
+	c.width = PW; c.height = 860 * k;
+	const g = c.getContext("2d"), f = st.frames[st.frame] || { base: "#1f6672", light: "#3a8f9b", dark: "#0f3d45" };
+	const rr = (x, y, w, h, r) => { g.beginPath(); g.roundRect(x * k, y * k, w * k, h * k, r * k); };
+	let gr = g.createLinearGradient(0, 0, 350 * k, 860 * k);
+	gr.addColorStop(0, f.light); gr.addColorStop(.42, f.base); gr.addColorStop(1, f.dark);
+	rr(0, 0, 1000, 860, 70); g.fillStyle = gr; g.fill();
+	rr(66, 56, 868, 605.5, 26); g.fillStyle = "rgba(0,0,0,.35)"; g.fill();
+	gr = g.createRadialGradient(330 * k, 180 * k, 20 * k, 330 * k, 180 * k, 820 * k);
+	gr.addColorStop(0, "#e5e5e0"); gr.addColorStop(.62, "#c8c8c3"); gr.addColorStop(1, "#b4b4af");
+	rr(80, 70, 840, 577.5, 16); g.fillStyle = gr; g.fill();
+	g.save(); rr(80, 70, 840, 577.5, 16); g.clip();
+	g.translate(80 * k, 70 * k); const s = 840 * k / W;
+	g.lineCap = "round"; g.lineJoin = "round"; g.strokeStyle = "#3b3b39"; g.lineWidth = 1.7 * s;
+	for (const q of st.segs) { g.globalAlpha = q[4]; g.beginPath(); g.moveTo(q[0] * s, q[1] * s); g.lineTo(q[2] * s, q[3] * s); g.stroke(); }
+	g.restore(); g.globalAlpha = 1;
+	for (const cx of [110, 890]) {
+		const kg = g.createRadialGradient((cx - 18) * k, 740 * k, 4 * k, cx * k, 760 * k, 62 * k);
+		kg.addColorStop(0, "#ffffff"); kg.addColorStop(.55, "#bfc2c6"); kg.addColorStop(1, "#7a7f86");
+		g.beginPath(); g.arc(cx * k, 760 * k, 62 * k, 0, Math.PI * 2); g.fillStyle = kg; g.fill();
+		g.strokeStyle = "rgba(0,0,0,.35)"; g.lineWidth = 3 * k; g.stroke();
+		g.strokeStyle = "rgba(70,74,80,.55)"; g.lineWidth = 2.2 * k;
+		for (let i = 0; i < 48; i++) { const a = i * Math.PI / 24; g.beginPath();
+			g.moveTo((cx + Math.cos(a) * 48) * k, (760 + Math.sin(a) * 48) * k); g.lineTo((cx + Math.cos(a) * 60) * k, (760 + Math.sin(a) * 60) * k); g.stroke(); }
+	}
+	g.font = `600 ${31 * k}px "Avenir Next","Trebuchet MS",sans-serif`; g.textAlign = "center";
+	g.fillStyle = "rgba(255,255,255,.55)"; g.letterSpacing = `${11 * k}px`;
+	g.fillText(L.label.toUpperCase(), 505 * k, 772 * k);
+	return Promise.resolve(c.toDataURL("image/png"));
+}
+async function photo() { const data = await makePng(); post("/photo", { data }); }
+
+/* ---------- Divers ---------- */
+let toastT;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 3200); }
+function fullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); }
+function toggleHelp() { $("help").classList.toggle("show"); }
+$("bShake").onclick = () => send({ t: "shake" });
+$("bPhoto").onclick = photo;
+$("bFull").onclick = fullscreen;
+$("bHelp").onclick = toggleHelp;
+$("help").onclick = (e) => { if (e.target.id === "help") toggleHelp(); };
+
+let idleT;
+function wake() { $("ui").classList.remove("hidden"); clearTimeout(idleT); idleT = setTimeout(() => { if (st.online) $("ui").classList.add("hidden"); }, 3500); }
+addEventListener("pointermove", wake); addEventListener("keydown", wake);
+
+new ResizeObserver(resize).observe($("screen"));
+applyTexts(); resize(); wake(); connect();
+</script>
+</body>
+</html>

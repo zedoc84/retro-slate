@@ -1,0 +1,26 @@
+{
+	"Name": "Ardoise rétro",
+	"Description": "Transformez votre Stream Deck et votre ordinateur en ardoise à dessin rétro : deux boutons, un seul trait, on secoue pour effacer.",
+	"Category": "Ardoise rétro",
+	"com.medilase.retro-slate.knob": {
+		"Name": "Molette",
+		"Tooltip": "Molette du Stream Deck + : tourner pour tracer, appuyer pour la vitesse, toucher l'écran pour secouer."
+	},
+	"com.medilase.retro-slate.arrow": {
+		"Name": "Flèche",
+		"Tooltip": "Maintenir pour tracer dans l'une des 8 directions."
+	},
+	"com.medilase.retro-slate.shake": {
+		"Name": "Secouer",
+		"Tooltip": "Un appui secoue un peu l'ardoise. Maintenir une seconde efface tout."
+	},
+	"com.medilase.retro-slate.slate": {
+		"Name": "Ardoise",
+		"Tooltip": "Votre dessin en direct sur la touche. Appuyer ouvre l'ardoise sur l'ordinateur."
+	},
+	"com.medilase.retro-slate.photo": {
+		"Name": "Photo",
+		"Tooltip": "Enregistre le dessin en image dans Images › Ardoise rétro."
+	},
+	"Localization": {}
+}

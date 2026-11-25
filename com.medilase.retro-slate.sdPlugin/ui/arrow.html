@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Arrow</title>
+	<link rel="stylesheet" href="pi.css" />
+	<script src="pi.js"></script>
+</head>
+<body>
+	<div class="row">
+		<label data-fr="Direction" data-en="Direction">Direction</label>
+		<div class="field">
+			<div class="grid" id="dirs">
+				<button data-d="nw">↖</button><button data-d="n">↑</button><button data-d="ne">↗</button>
+				<button data-d="w">←</button><span class="mid"></span><button data-d="e">→</button>
+				<button data-d="sw">↙</button><button data-d="s">↓</button><button data-d="se">↘</button>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<label data-fr="Vitesse" data-en="Speed">Speed</label>
+		<div class="field">
+			<select id="speed">
+				<option value="slow" data-fr="Lente" data-en="Slow">Slow</option>
+				<option value="normal" data-fr="Normale" data-en="Normal">Normal</option>
+				<option value="fast" data-fr="Rapide" data-en="Fast">Fast</option>
+			</select>
+		</div>
+	</div>
+	<div class="row">
+		<label></label>
+		<div class="field"><button class="primary" id="open" data-fr="Ouvrir l'ardoise" data-en="Open the slate">Open the slate</button></div>
+	</div>
+	<p class="help"
+		data-fr="<b>Maintenir</b> la touche pour tracer ; le trait accélère au bout d'un instant. Un appui bref avance d'un cran."
+		data-en="<b>Hold</b> the key to draw; the line speeds up after a moment. A short press moves one notch."></p>
+	<script>
+		const dirs = document.querySelectorAll("#dirs button");
+		const speed = document.getElementById("speed");
+		const paint = () => dirs.forEach((b) => b.classList.toggle("on", b.dataset.d === PI.get("dir", "e")));
+		PI.onReady = () => {
+			paint();
+			speed.value = PI.get("speed", "normal");
+		};
+		dirs.forEach((b) => (b.onclick = () => { PI.set("dir", b.dataset.d); paint(); }));
+		speed.onchange = () => PI.set("speed", speed.value);
+		document.getElementById("open").onclick = () => PI.toPlugin({ cmd: "open" });
+	</script>
+</body>
+</html>

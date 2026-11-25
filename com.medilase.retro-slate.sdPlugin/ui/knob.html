@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Knob</title>
+	<link rel="stylesheet" href="pi.css" />
+	<script src="pi.js"></script>
+</head>
+<body>
+	<div class="row">
+		<label data-fr="Axe" data-en="Axis">Axis</label>
+		<div class="field">
+			<select id="axis">
+				<option value="auto" data-fr="Auto (gauche ↔, droite ↕)" data-en="Auto (left ↔, right ↕)">Auto</option>
+				<option value="h" data-fr="Horizontale ↔" data-en="Horizontal ↔">Horizontal</option>
+				<option value="v" data-fr="Verticale ↕" data-en="Vertical ↕">Vertical</option>
+			</select>
+		</div>
+	</div>
+	<div class="row">
+		<label data-fr="Vitesse" data-en="Speed">Speed</label>
+		<div class="field">
+			<select id="speed">
+				<option value="0" data-fr="Fin" data-en="Fine">Fine</option>
+				<option value="1" data-fr="Normal" data-en="Normal">Normal</option>
+				<option value="2" data-fr="Rapide" data-en="Fast">Fast</option>
+			</select>
+		</div>
+	</div>
+	<div class="row">
+		<label></label>
+		<div class="field"><button class="primary" id="open" data-fr="Ouvrir l'ardoise" data-en="Open the slate">Open the slate</button></div>
+	</div>
+	<p class="help"
+		data-fr="<b>Tourner</b> : tracer · <b>Appuyer</b> : vitesse<br><b>Toucher l'écran</b> : secouer · <b>Appui long</b> : tout effacer"
+		data-en="<b>Turn</b>: draw · <b>Press</b>: speed<br><b>Touch the screen</b>: shake · <b>Long touch</b>: erase all"></p>
+	<script>
+		const axis = document.getElementById("axis");
+		const speed = document.getElementById("speed");
+		PI.onReady = () => {
+			axis.value = PI.get("axis", "auto");
+			speed.value = String(PI.get("speed", 1));
+		};
+		axis.onchange = () => PI.set("axis", axis.value);
+		speed.onchange = () => PI.set("speed", Number(speed.value));
+		document.getElementById("open").onclick = () => PI.toPlugin({ cmd: "open" });
+	</script>
+</body>
+</html>

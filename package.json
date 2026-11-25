@@ -1,0 +1,29 @@
+{
+  "name": "retro-slate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Retro Slate — Stream Deck plugin (Medilase / Studio Thelba)",
+  "type": "module",
+  "scripts": {
+    "icons": "python3 tools/icons.py",
+    "build": "rollup -c",
+    "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.medilase.retro-slate\"",
+    "validate": "streamdeck validate com.medilase.retro-slate.sdPlugin",
+    "pack": "streamdeck pack com.medilase.retro-slate.sdPlugin --output dist --force"
+  },
+  "dependencies": {
+    "@elgato/streamdeck": "^3.0.4"
+  },
+  "devDependencies": {
+    "@elgato/cli": "^1.10.4",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.1.0",
+    "@types/node": "^24.0.0",
+    "rollup": "^4.0.2",
+    "tslib": "^2.6.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.6.0"
+  }
+}
